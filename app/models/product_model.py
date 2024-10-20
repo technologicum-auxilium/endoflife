@@ -1,3 +1,4 @@
+import gc
 import httpx
 import logging
 from cachetools import cached, TTLCache
@@ -86,3 +87,15 @@ def fetch_product_data_specific_sync(base_url: str, endpoint: str):
                 "detail": str(exc),
             }
         }
+
+def render_product_summarized(data):
+    summarized_data = []
+    for item in data:
+        if isinstance(item, dict) and "eol" in item:
+            summarized_data.append({
+                "eol": item["eol"],
+            })
+    return summarized_data
+
+def render_product_data(data):
+    return data

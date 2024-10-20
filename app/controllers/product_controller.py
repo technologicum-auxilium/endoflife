@@ -5,6 +5,7 @@ from app.models import product_model
 from concurrent.futures import ThreadPoolExecutor
 import os
 import logging
+from app.utils.garbage_collector import GarbageCollector
 
 max_workers = int(os.getenv("MAX_WORKERS", 10))
 base_url = os.getenv("BASE_URL", "https://endoflife.date/api/")
@@ -15,6 +16,7 @@ logger.setLevel(LOG_LEVEL)
 
 router = APIRouter()
 executor = ThreadPoolExecutor(max_workers=max_workers)
+garbage_collector = GarbageCollector()
 
 async def run_blocking_task(task, *args):
     loop = asyncio.get_running_loop()
@@ -30,6 +32,7 @@ async def get_product(product: str):
             logger.error(f"Error fetching product data: {error['message']} (Status Code: {error.get('status_code', 'N/A')})")
             raise HTTPException(status_code=error.get("status_code", 400), detail=error["message"])
         logger.info(f"Successfully fetched product data for: {product}")
+        garbage_collector.collect()
         return product_view.render_product_data(data)
     except HTTPException as exc:
         logger.exception(f"HTTPException while fetching product data for: {product}")
@@ -48,6 +51,7 @@ async def get_product_cycle(product: str, cycle: str):
             logger.error(f"Error fetching product data: {error['message']} (Status Code: {error.get('status_code', 'N/A')})")
             raise HTTPException(status_code=error.get("status_code", 400), detail=error["message"])
         logger.info(f"Successfully fetched product data for: {product} and cycle: {cycle}")
+        garbage_collector.collect()
         return product_view.render_product_data(data)
     except HTTPException as exc:
         logger.exception(f"HTTPException while fetching product data for: {product} and cycle: {cycle}")
@@ -60,24 +64,18 @@ async def get_product_cycle(product: str, cycle: str):
 async def get_product_cycle_summarized(product: str, cycle: str):
     logger.info(f"Fetching summarized product data for: {product} and cycle: {cycle}")
     try:
-        # Busca os dados completos do produto e ciclo
         data = await run_blocking_task(product_model.fetch_product_data_specific_sync, base_url, f"{product}/{cycle}")
-        
-        # Verifica se há algum erro na resposta
         if "error" in data:
             error = data["error"]
             logger.error(f"Error fetching product data: {error['message']} (Status Code: {error.get('status_code', 'N/A')})")
             raise HTTPException(status_code=error.get("status_code", 400), detail=error["message"])
-        
-        # Extrai o campo 'eol' do JSON e retorna apenas ele
         eol = data.get("eol")
         if eol is None:
             logger.error(f"'eol' not found in product data for: {product} and cycle: {cycle}")
             raise HTTPException(status_code=404, detail="'eol' field not found in product data")
-        
         logger.info(f"Successfully fetched 'eol' data for: {product} and cycle: {cycle}")
+        garbage_collector.collect()
         return {"eol": eol}
-    
     except HTTPException as exc:
         logger.exception(f"HTTPException while fetching summarized product data for: {product} and cycle: {cycle}")
         raise exc

@@ -16,24 +16,26 @@ export let options = {
 };
 
 export default function () {
-    let res = http.get('http://localhost:8000/health/liveness');
+    let res;
+
+    // Testando o endpoint de produto completo
+    res = http.get('http://localhost:8000/products/python');
     check(res, {
         'status was 200': (r) => r.status === 200,
     }) || errorRate.add(1);
 
-    res = http.get('http://localhost:8000/health/readiness');
-    check(res, {
-        'status was 200': (r) => r.status === 200,
-    }) || errorRate.add(1);
-
-    res = http.get('http://localhost:8000/products/all');
-    check(res, {
-        'status was 200': (r) => r.status === 200,
-    }) || errorRate.add(1);
-
+    // Testando o endpoint de ciclo
     res = http.get('http://localhost:8000/products/python/3.11');
     check(res, {
         'status was 200': (r) => r.status === 200,
+        'eol exists': (r) => r.json().eol !== undefined,
+    }) || errorRate.add(1);
+
+    // Testando o endpoint resumido
+    res = http.get('http://localhost:8000/products/python/3.11/summarized');
+    check(res, {
+        'status was 200': (r) => r.status === 200,
+        'eol exists': (r) => r.json().eol !== undefined,
     }) || errorRate.add(1);
 
     sleep(1);
