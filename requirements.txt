@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+httpx
+python-dotenv
+json-log-formatter
+pytest
+cachetools
+gc
