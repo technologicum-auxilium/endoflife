@@ -55,3 +55,32 @@ async def get_product_cycle(product: str, cycle: str):
     except Exception as exc:
         logger.exception(f"Exception while fetching product data for: {product} and cycle: {cycle}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {exc}")
+
+@router.get("/products/{product}/{cycle}/summarized")
+async def get_product_cycle_summarized(product: str, cycle: str):
+    logger.info(f"Fetching summarized product data for: {product} and cycle: {cycle}")
+    try:
+        # Busca os dados completos do produto e ciclo
+        data = await run_blocking_task(product_model.fetch_product_data_specific_sync, base_url, f"{product}/{cycle}")
+        
+        # Verifica se há algum erro na resposta
+        if "error" in data:
+            error = data["error"]
+            logger.error(f"Error fetching product data: {error['message']} (Status Code: {error.get('status_code', 'N/A')})")
+            raise HTTPException(status_code=error.get("status_code", 400), detail=error["message"])
+        
+        # Extrai o campo 'eol' do JSON e retorna apenas ele
+        eol = data.get("eol")
+        if eol is None:
+            logger.error(f"'eol' not found in product data for: {product} and cycle: {cycle}")
+            raise HTTPException(status_code=404, detail="'eol' field not found in product data")
+        
+        logger.info(f"Successfully fetched 'eol' data for: {product} and cycle: {cycle}")
+        return {"eol": eol}
+    
+    except HTTPException as exc:
+        logger.exception(f"HTTPException while fetching summarized product data for: {product} and cycle: {cycle}")
+        raise exc
+    except Exception as exc:
+        logger.exception(f"Exception while fetching summarized product data for: {product} and cycle: {cycle}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {exc}")
