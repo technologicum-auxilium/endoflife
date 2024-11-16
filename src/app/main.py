@@ -8,7 +8,6 @@ from .utils.custom_json_formatter import CustomJSONFormatter
 from .health.health_checker import HealthChecker
 from .utils.garbage_collector import GarbageCollector
 
-# Adicionando o caminho do diretório src ao sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 load_dotenv()
