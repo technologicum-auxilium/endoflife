@@ -3,6 +3,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class GarbageCollector:
     def __init__(self, thresholds=(700, 10, 5)):
         self.thresholds = thresholds

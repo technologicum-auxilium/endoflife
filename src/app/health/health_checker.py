@@ -5,6 +5,7 @@ from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
 
+
 class HealthChecker:
     def __init__(self):
         self.base_url = os.getenv("BASE_URL", "https://endoflife.date/api/")
@@ -17,7 +18,9 @@ class HealthChecker:
                 response.raise_for_status()
                 return response.status_code == 200
         except httpx.HTTPStatusError as exc:
-            logger.error(f"HTTPStatusError: {exc.response.status_code} - {exc.response.text}")
+            logger.error(
+                f"HTTPStatusError: {exc.response.status_code} - {exc.response.text}"
+            )
         except Exception as exc:
             logger.exception("Unexpected error during health check")
         return False
