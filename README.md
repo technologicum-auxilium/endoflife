@@ -154,5 +154,4 @@ docker run -p 8000:8000 --env-file .env endoflife-app
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 👥 Contributors
-
-    Technologicum Auxilium
+Technologicum Auxilium
